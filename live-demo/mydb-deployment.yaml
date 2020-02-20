@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mydb
+    labels:
+        name: mydb
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mydb
+    template:
+        metadata:
+            labels:
+                app: mydb
+        spec:
+            volumes:
+            - name: dbvol
+              persistentVolumeClaim:
+                claimName: mydb-pvc
+            # initContainers:
+            #     - name: scrubs
+            #       image: busybox
+            #       command: ["/bin/sh", "-c", "test -e /scrub && rm -rf /scrub/..?* /scrub/.[!.]* /scrub/*  && test -z \"$(ls -A /scrub)\" || exit 1"]
+            #       volumeMounts:
+            #         - mountPath: /scrub
+            #           name: dbvol
+            containers:
+            - image: stackupiss/northwind-db:v1
+              name: mydb
+              env:
+              - name: MYSQL_ROOT_PASSWORD
+                value: changeit
+              - name: MYSQL_DATABASE
+                value: northwind   
+              ports:
+              - containerPort: 3306
+                name: mydb
+              imagePullPolicy: Always
+              volumeMounts:
+                - mountPath: /var/lib/mysql
+                  name: dbvol
+
+    
